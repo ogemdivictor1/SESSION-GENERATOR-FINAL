@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>CYPHER PAIRS — simple UI</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        max-width: 900px;
+        margin: auto;
+      }
+      input,
+      button,
+      textarea {
+        padding: 8px;
+        margin: 6px 0;
+        width: 100%;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+      }
+      .col {
+        flex: 1;
+      }
+      .card {
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        padding: 16px;
+        margin-bottom: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CYPHER PAIRS</h1>
+    <p>
+      Simple UI. Admin token is required on server for actions (use
+      ?token=YOUR_TOKEN)
+    </p>
+
+    <div class="card">
+      <h3>Start session (admin)</h3>
+      <input id="start-id" placeholder="session id (e.g. alice)" />
+      <input
+        id="start-token"
+        placeholder="admin token (same as server ADMIN_TOKEN)"
+      />
+      <button onclick="startSession()">Start session (create QR)</button>
+      <div id="start-res"></div>
+    </div>
+
+    <div class="card">
+      <h3>Open QR for session</h3>
+      <input id="qr-id" placeholder="session id" />
+      <button onclick="openQR()">Open QR page</button>
+    </div>
+
+    <div class="card">
+      <h3>Request Pair Code (admin)</h3>
+      <input id="pair-id" placeholder="session id (e.g. bob)" />
+      <input
+        id="pair-phone"
+        placeholder="phone number in international format (e.g. 2348126159499)"
+      />
+      <input id="pair-token" placeholder="admin token" />
+      <button onclick="requestPair()">Request Pair Code</button>
+      <pre id="pair-res"></pre>
+    </div>
+
+    <script>
+      async function startSession() {
+        const id = document.getElementById("start-id").value;
+        const token = document.getElementById("start-token").value;
+        if (!id || !token) {
+          alert("enter id and token");
+          return;
+        }
+        const res = await fetch(
+          "http://localhost:3000/api/start-session?token=" +
+            encodeURIComponent(token),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id }),
+          }
+        );
+        const j = await res.json();
+        document.getElementById("start-res").innerText = JSON.stringify(
+          j,
+          null,
+          2
+        );
+      }
+      function openQR() {
+        const id = document.getElementById("qr-id").value;
+        if (!id) {
+          alert("enter id");
+          return;
+        }
+        window.open(
+          "http://localhost:3000/qr/" + encodeURIComponent(id),
+          "_blank"
+        );
+      }
+      async function requestPair() {
+        const id = document.getElementById("pair-id").value;
+        const number = document.getElementById("pair-phone").value;
+        const token = document.getElementById("pair-token").value;
+        if (!id || !number || !token) {
+          alert("enter id, phone, token");
+          return;
+        }
+        const res = await fetch(
+          "http://localhost:3000/api/pair-code?token=" +
+            encodeURIComponent(token),
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, number }),
+          }
+        );
+        const j = await res.json();
+        document.getElementById("pair-res").innerText = JSON.stringify(
+          j,
+          null,
+          2
+        );
+      }
+    </script>
+  </body>
+</html>
